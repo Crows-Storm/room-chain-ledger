@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package room.v1;
+
+option go_package = "github.com/yourname/room-chain-ledger/api/gen/room_service";
+
+service RoomService {
+
+  // create room
+  rpc CreateRoom(CreateRoomRequest)
+      returns (CreateRoomResponse);
+
+  // join room
+  rpc JoinRoom(JoinRoomRequest)
+      returns (JoinRoomResponse);
+
+  // close room
+  rpc CloseRoom(CloseRoomRequest)
+      returns (CloseRoomResponse);
+
+  // get room info
+  rpc GetRoom(GetRoomRequest)
+      returns (RoomResponse);
+
+  // list room members
+  rpc ListMembers(ListMembersRequest)
+      returns (ListMembersResponse);
+
+  // submit transaction (construct and forward to blockchain_node)
+  rpc SubmitRoomTransaction(SubmitRoomTransactionRequest)
+      returns (SubmitRoomTransactionResponse);
+}
+
+message CreateRoomRequest {
+  string creator_address = 1;
+  string room_name = 2;
+  int32 max_members = 3;
+}
+
+message CreateRoomResponse {
+  string room_id = 1;
+  string tea_address = 2; // 茶水地址
+  bool success = 3;
+  string error = 4;
+}
+
+message JoinRoomRequest {
+  string room_id = 1;
+  string member_address = 2;
+}
+
+message JoinRoomResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message CloseRoomRequest {
+  string room_id = 1;
+  string operator_address = 2; // must be creator
+}
+
+message CloseRoomResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message GetRoomRequest {
+  string room_id = 1;
+}
+
+message RoomResponse {
+  Room room = 1;
+  bool found = 2;
+  string error = 3;
+}
+
+message ListMembersRequest {
+  string room_id = 1;
+}
+
+message ListMembersResponse {
+  repeated string member_addresses = 1;
+  string error = 2;
+}
+
+message SubmitRoomTransactionRequest {
+  string room_id = 1;
+  string from = 2;
+  string to = 3;
+  string amount = 4;
+  string signature = 5;
+  string nonce = 6;
+}
+
+message SubmitRoomTransactionResponse {
+  string tx_hash = 1;
+  bool accepted = 2;
+  string error = 3;
+}
+
+message Room {
+  string room_id = 1;
+  string room_name = 2;
+  string creator_address = 3;
+  string tea_address = 4;
+  repeated string member_addresses = 5;
+  int32 max_members = 6;
+  string status = 7; // active, closed
+  int64 created_at = 8;
+  int64 closed_at = 9;
+}

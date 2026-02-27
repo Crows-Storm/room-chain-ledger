@@ -1,11 +1,16 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
-	"github.com/Crows-Storm/room-chain-ledger/tree/main/internal/common/viper_conf"
-	"github.com/spf13/viper"
+	"github.com/Crows-Storm/room-chain-ledger/pkg/crypto"
 )
+
+func main() {
+
+	fmt.Println(crypto.Hello())
+
+}
 
 //const (
 //	DEFAULT = "/"
@@ -35,13 +40,3 @@ import (
 //	}
 //	log.Println("=== Room Block Service Shutdown ===")
 //}
-
-func init() {
-	if err := viper_conf.NewViperConfig(); err != nil {
-		log.Fatalf("[Room Block] Init: %v \n", err)
-	}
-}
-
-func main() {
-	log.Printf("[Room Block] Init %v \n", viper.Get("blockchain"))
-}

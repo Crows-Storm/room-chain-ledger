@@ -1,0 +1,720 @@
+openapi: 3.0.3
+
+info:
+  title: Transaction Gateway Service
+  description: Unified gateway service for routing requests to blockchain_node, room_service, and wallet_service
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: crowSupport@htomail.com
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+
+servers:
+  - url: 'https://{hostname}/api/v1'
+    description: Production server
+    variables:
+      hostname:
+        default: 127.0.0.1
+        description: myself localhost development env
+
+tags:
+  - name: Transaction
+    description: Transaction submission and query operations
+  - name: Room
+    description: Room management operations
+  - name: Wallet
+    description: Wallet operations
+  - name: Blockchain
+    description: Blockchain query operations
+  - name: Health
+    description: Health check operations
+
+paths:
+  /transactions:
+    post:
+      tags:
+        - Transaction
+      summary: Submit transaction
+      description: Submit a transaction through the gateway
+      operationId: submitTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewaySubmitTransactionRequest'
+      responses:
+        '200':
+          description: Transaction submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewaySubmitTransactionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /transactions/{tx_hash}:
+    get:
+      tags:
+        - Transaction
+      summary: Get transaction
+      description: Query transaction by hash
+      operationId: getTransaction
+      parameters:
+        - name: tx_hash
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{64}$'
+            example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+      responses:
+        '200':
+          description: Transaction found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGetTransactionResponse'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms:
+    post:
+      tags:
+        - Room
+      summary: Create room
+      description: Create a new room
+      operationId: createRoom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayCreateRoomRequest'
+      responses:
+        '200':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayCreateRoomResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}:
+    get:
+      tags:
+        - Room
+      summary: Get room information
+      description: Retrieve room details
+      operationId: getRoom
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      responses:
+        '200':
+          description: Room found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGetRoomResponse'
+        '404':
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}/join:
+    post:
+      tags:
+        - Room
+      summary: Join room
+      description: Join an existing room
+      operationId: joinRoom
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayJoinRoomRequest'
+      responses:
+        '200':
+          description: Successfully joined room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayJoinRoomResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}/close:
+    post:
+      tags:
+        - Room
+      summary: Close room
+      description: Close an existing room
+      operationId: closeRoom
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayCloseRoomRequest'
+      responses:
+        '200':
+          description: Room closed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayCloseRoomResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets:
+    post:
+      tags:
+        - Wallet
+      summary: Create wallet
+      description: Create a new wallet
+      operationId: createWallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayCreateWalletRequest'
+      responses:
+        '200':
+          description: Wallet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayCreateWalletResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{address}/balance:
+    get:
+      tags:
+        - Blockchain
+      summary: Get account balance
+      description: Query account balance
+      operationId: getBalance
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGetBalanceResponse'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /blocks/number/{block_number}:
+    get:
+      tags:
+        - Blockchain
+      summary: Get block by number
+      description: Query block by block number
+      operationId: getBlockByNumber
+      parameters:
+        - name: block_number
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            example: 12345
+      responses:
+        '200':
+          description: Block found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGetBlockResponse'
+        '404':
+          description: Block not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /blocks/hash/{block_hash}:
+    get:
+      tags:
+        - Blockchain
+      summary: Get block by hash
+      description: Query block by block hash
+      operationId: getBlockByHash
+      parameters:
+        - name: block_hash
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{64}$'
+            example: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678'
+      responses:
+        '200':
+          description: Block found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGetBlockResponse'
+        '404':
+          description: Block not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check gateway and downstream services health
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Health status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+components:
+  schemas:
+    GatewaySubmitTransactionRequest:
+      type: object
+      required:
+        - from
+        - to
+        - amount
+        - room_id
+        - signature
+        - nonce
+      properties:
+        from:
+          type: string
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        to:
+          type: string
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        amount:
+          type: string
+          example: '1000000000000000000'
+        room_id:
+          type: string
+          example: 'room_12345'
+        signature:
+          type: string
+          example: '0x1234567890abcdef...'
+        nonce:
+          type: string
+          example: '42'
+        client_id:
+          type: string
+          description: Client identifier for rate limiting
+          example: 'client_abc123'
+
+    GatewaySubmitTransactionResponse:
+      type: object
+      properties:
+        tx_hash:
+          type: string
+          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        accepted:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayGetTransactionResponse:
+      type: object
+      properties:
+        tx_hash:
+          type: string
+          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        from:
+          type: string
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        to:
+          type: string
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        amount:
+          type: string
+          example: '1000000000000000000'
+        room_id:
+          type: string
+          example: 'room_12345'
+        signature:
+          type: string
+          example: '0x1234567890abcdef...'
+        nonce:
+          type: string
+          example: '42'
+        timestamp:
+          type: integer
+          format: int64
+          example: 1735678900
+        block_number:
+          type: integer
+          format: int64
+          example: 12345
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - failed
+          example: 'confirmed'
+        found:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayCreateRoomRequest:
+      type: object
+      required:
+        - creator_address
+        - room_name
+        - max_members
+        - auth_token
+      properties:
+        creator_address:
+          type: string
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        room_name:
+          type: string
+          example: 'Gaming Room #1'
+        max_members:
+          type: integer
+          format: int32
+          minimum: 2
+          example: 10
+        auth_token:
+          type: string
+          description: Authentication token
+          example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
+    GatewayCreateRoomResponse:
+      type: object
+      properties:
+        room_id:
+          type: string
+          example: 'room_12345'
+        tea_address:
+          type: string
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        success:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayJoinRoomRequest:
+      type: object
+      required:
+        - member_address
+        - auth_token
+      properties:
+        member_address:
+          type: string
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x987d35Cc6634C0532925a3b844Bc454e4438f456'
+        auth_token:
+          type: string
+          example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
+    GatewayJoinRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayCloseRoomRequest:
+      type: object
+      required:
+        - operator_address
+        - auth_token
+      properties:
+        operator_address:
+          type: string
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        auth_token:
+          type: string
+          example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
+    GatewayCloseRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayGetRoomResponse:
+      type: object
+      properties:
+        room_id:
+          type: string
+          example: 'room_12345'
+        room_name:
+          type: string
+          example: 'Gaming Room #1'
+        creator_address:
+          type: string
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        tea_address:
+          type: string
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        member_addresses:
+          type: array
+          items:
+            type: string
+          example:
+            - '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+            - '0x987d35Cc6634C0532925a3b844Bc454e4438f456'
+        max_members:
+          type: integer
+          format: int32
+          example: 10
+        status:
+          type: string
+          enum:
+            - active
+            - closed
+          example: 'active'
+        created_at:
+          type: integer
+          format: int64
+          example: 1735678900
+        closed_at:
+          type: integer
+          format: int64
+          example: 0
+        found:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayCreateWalletRequest:
+      type: object
+      required:
+        - user_id
+        - auth_token
+      properties:
+        user_id:
+          type: string
+          example: 'user_12345'
+        auth_token:
+          type: string
+          example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
+    GatewayCreateWalletResponse:
+      type: object
+      properties:
+        address:
+          type: string
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        private_key:
+          type: string
+          description: Should be encrypted in production
+          example: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'
+        public_key:
+          type: string
+          example: '0x04abcdef...'
+        success:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    GatewayGetBalanceResponse:
+      type: object
+      properties:
+        balance:
+          type: integer
+          format: int64
+          example: 1000000000000000000
+        error:
+          type: string
+          example: ''
+
+    GatewayGetBlockResponse:
+      type: object
+      properties:
+        block_number:
+          type: integer
+          format: int64
+          example: 12345
+        block_hash:
+          type: string
+          example: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678'
+        previous_hash:
+          type: string
+          example: '0x9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef'
+        timestamp:
+          type: integer
+          format: int64
+          example: 1735678900
+        transaction_count:
+          type: integer
+          format: int32
+          example: 42
+        found:
+          type: boolean
+          example: true
+        error:
+          type: string
+          example: ''
+
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Overall health status
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+          example: 'healthy'
+        services:
+          type: object
+          description: Status of downstream services
+          additionalProperties:
+            type: string
+          example:
+            blockchain_node: 'healthy'
+            room_service: 'healthy'
+            wallet_service: 'healthy'
+        timestamp:
+          type: integer
+          format: int64
+          description: Timestamp of health check
+          example: 1735678900
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: 'Resource not found'
+        code:
+          type: integer
+          description: Error code
+          example: 404

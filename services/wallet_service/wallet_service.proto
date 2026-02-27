@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package wallet.v1;
+
+option go_package = "github.com/yourname/room-chain-ledger/api/gen/wallet_service";
+
+service WalletService {
+
+  // create wallet
+  rpc CreateWallet(CreateWalletRequest)
+      returns (CreateWalletResponse);
+
+  // get wallet info
+  rpc GetWallet(GetWalletRequest)
+      returns (WalletResponse);
+
+  // sign transaction
+  rpc SignTransaction(SignTransactionRequest)
+      returns (SignTransactionResponse);
+
+  // verify signature
+  rpc VerifySignature(VerifySignatureRequest)
+      returns (VerifySignatureResponse);
+
+  // bind wallet to room
+  rpc BindRoom(BindRoomRequest)
+      returns (BindRoomResponse);
+
+  // unbind wallet from room
+  rpc UnbindRoom(UnbindRoomRequest)
+      returns (UnbindRoomResponse);
+
+  // check if wallet is bound
+  rpc CheckBinding(CheckBindingRequest)
+      returns (CheckBindingResponse);
+}
+
+message CreateWalletRequest {
+  string user_id = 1; // optional identifier
+}
+
+message CreateWalletResponse {
+  string address = 1;
+  string private_key = 2; // should be encrypted in production
+  string public_key = 3;
+  bool success = 4;
+  string error = 5;
+}
+
+message GetWalletRequest {
+  string address = 1;
+}
+
+message WalletResponse {
+  Wallet wallet = 1;
+  bool found = 2;
+  string error = 3;
+}
+
+message SignTransactionRequest {
+  string address = 1;
+  string from = 2;
+  string to = 3;
+  string amount = 4;
+  string room_id = 5;
+  string nonce = 6;
+}
+
+message SignTransactionResponse {
+  string signature = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message VerifySignatureRequest {
+  string address = 1;
+  string message = 2;
+  string signature = 3;
+}
+
+message VerifySignatureResponse {
+  bool valid = 1;
+  string error = 2;
+}
+
+message BindRoomRequest {
+  string address = 1;
+  string room_id = 2;
+}
+
+message BindRoomResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message UnbindRoomRequest {
+  string address = 1;
+  string room_id = 2;
+}
+
+message UnbindRoomResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message CheckBindingRequest {
+  string address = 1;
+}
+
+message CheckBindingResponse {
+  bool is_bound = 1;
+  string room_id = 2;
+  string error = 3;
+}
+
+message Wallet {
+  string address = 1;
+  string public_key = 2;
+  string user_id = 3;
+  string bound_room_id = 4;
+  int64 created_at = 5;
+}

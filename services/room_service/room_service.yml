@@ -1,0 +1,480 @@
+openapi: 3.0.3
+
+info:
+  title: Room Service
+  description: Room management service for creating and managing rooms in the blockchain ledger
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: crowSupport@htomail.com
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+
+servers:
+  - url: 'https://{hostname}/api/v1'
+    description: Production server
+    variables:
+      hostname:
+        default: 127.0.0.1
+        description: myself localhost development env
+
+tags:
+  - name: Room
+    description: Room management operations
+  - name: Members
+    description: Room member operations
+  - name: Transaction
+    description: Room transaction operations
+
+paths:
+  /rooms:
+    post:
+      tags:
+        - Room
+      summary: Create a new room
+      description: Create a new room with specified parameters
+      operationId: createRoom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+      responses:
+        '200':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRoomResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}:
+    get:
+      tags:
+        - Room
+      summary: Get room information
+      description: Retrieve detailed information about a specific room
+      operationId: getRoom
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+          description: Room identifier
+      responses:
+        '200':
+          description: Room found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+        '404':
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}/join:
+    post:
+      tags:
+        - Room
+      summary: Join a room
+      description: Add a member to an existing room
+      operationId: joinRoom
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinRoomRequest'
+      responses:
+        '200':
+          description: Successfully joined room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinRoomResponse'
+        '400':
+          description: Invalid request or room is full
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}/close:
+    post:
+      tags:
+        - Room
+      summary: Close a room
+      description: Close an existing room (creator only)
+      operationId: closeRoom
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseRoomRequest'
+      responses:
+        '200':
+          description: Room closed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloseRoomResponse'
+        '403':
+          description: Not authorized to close room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}/members:
+    get:
+      tags:
+        - Members
+      summary: List room members
+      description: Get all members of a specific room
+      operationId: listMembers
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      responses:
+        '200':
+          description: Members retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMembersResponse'
+        '404':
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /rooms/{room_id}/transactions:
+    post:
+      tags:
+        - Transaction
+      summary: Submit room transaction
+      description: Submit a transaction within a room context
+      operationId: submitRoomTransaction
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 'room_12345'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitRoomTransactionRequest'
+      responses:
+        '200':
+          description: Transaction submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitRoomTransactionResponse'
+        '400':
+          description: Invalid transaction parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreateRoomRequest:
+      type: object
+      required:
+        - creator_address
+        - room_name
+        - max_members
+      properties:
+        creator_address:
+          type: string
+          description: Address of the room creator
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        room_name:
+          type: string
+          description: Name of the room
+          minLength: 1
+          maxLength: 100
+          example: 'Gaming Room #1'
+        max_members:
+          type: integer
+          format: int32
+          description: Maximum number of members allowed
+          minimum: 2
+          maximum: 1000
+          example: 10
+
+    CreateRoomResponse:
+      type: object
+      properties:
+        room_id:
+          type: string
+          description: Unique room identifier
+          example: 'room_12345'
+        tea_address:
+          type: string
+          description: Tea address for room transactions
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        success:
+          type: boolean
+          description: Whether room creation was successful
+          example: true
+        error:
+          type: string
+          description: Error message if creation failed
+          example: ''
+
+    JoinRoomRequest:
+      type: object
+      required:
+        - member_address
+      properties:
+        member_address:
+          type: string
+          description: Address of the member joining
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x987d35Cc6634C0532925a3b844Bc454e4438f456'
+
+    JoinRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether join was successful
+          example: true
+        error:
+          type: string
+          description: Error message if join failed
+          example: ''
+
+    CloseRoomRequest:
+      type: object
+      required:
+        - operator_address
+      properties:
+        operator_address:
+          type: string
+          description: Address of the operator (must be creator)
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+
+    CloseRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether room closure was successful
+          example: true
+        error:
+          type: string
+          description: Error message if closure failed
+          example: ''
+
+    RoomResponse:
+      type: object
+      properties:
+        room:
+          $ref: '#/components/schemas/Room'
+        found:
+          type: boolean
+          description: Whether the room was found
+          example: true
+        error:
+          type: string
+          description: Error message if any
+          example: ''
+
+    ListMembersResponse:
+      type: object
+      properties:
+        member_addresses:
+          type: array
+          description: List of member addresses
+          items:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+          example:
+            - '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+            - '0x987d35Cc6634C0532925a3b844Bc454e4438f456'
+        error:
+          type: string
+          description: Error message if any
+          example: ''
+
+    SubmitRoomTransactionRequest:
+      type: object
+      required:
+        - from
+        - to
+        - amount
+        - signature
+        - nonce
+      properties:
+        from:
+          type: string
+          description: Sender's address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        to:
+          type: string
+          description: Recipient's address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        amount:
+          type: string
+          description: Transaction amount
+          example: '1000000000000000000'
+        signature:
+          type: string
+          description: Cryptographic signature
+          example: '0x1234567890abcdef...'
+        nonce:
+          type: string
+          description: Transaction nonce
+          example: '42'
+
+    SubmitRoomTransactionResponse:
+      type: object
+      properties:
+        tx_hash:
+          type: string
+          description: Transaction hash
+          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        accepted:
+          type: boolean
+          description: Whether transaction was accepted
+          example: true
+        error:
+          type: string
+          description: Error message if transaction failed
+          example: ''
+
+    Room:
+      type: object
+      properties:
+        room_id:
+          type: string
+          description: Unique room identifier
+          example: 'room_12345'
+        room_name:
+          type: string
+          description: Name of the room
+          example: 'Gaming Room #1'
+        creator_address:
+          type: string
+          description: Address of the room creator
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        tea_address:
+          type: string
+          description: Tea address for room transactions
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        member_addresses:
+          type: array
+          description: List of member addresses
+          items:
+            type: string
+          example:
+            - '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+            - '0x987d35Cc6634C0532925a3b844Bc454e4438f456'
+        max_members:
+          type: integer
+          format: int32
+          description: Maximum number of members
+          example: 10
+        status:
+          type: string
+          description: Room status
+          enum:
+            - active
+            - closed
+          example: 'active'
+        created_at:
+          type: integer
+          format: int64
+          description: Creation timestamp
+          example: 1735678900
+        closed_at:
+          type: integer
+          format: int64
+          description: Closure timestamp (0 if not closed)
+          example: 0
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: 'Resource not found'
+        code:
+          type: integer
+          description: Error code
+          example: 404

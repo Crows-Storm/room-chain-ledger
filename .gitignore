@@ -12,7 +12,10 @@
 *.out
 
 # Go workspace file
-go.work
+**/go.work
+**/go.work.sum
+
+**/go.sum
 
 # Dependency directories
 vendor/
@@ -66,3 +69,11 @@ config.local.yaml
 config.local.json
 secrets.yaml
 secrets.json
+
+*.pb.go
+**/*.pb.go
+
+**/.openapi-generator-ignore
+
+**/FILES
+**/doc/*

@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package blockchain.v1;
+
+option go_package = "github.com/yourname/room-chain-ledger/api/gen/blockchain_node";
+
+service BlockchainService {
+
+  // submit transaction
+  rpc SubmitTransaction(SubmitTransactionRequest)
+      returns (SubmitTransactionResponse);
+
+  // query transaction
+  rpc GetTransaction(GetTransactionRequest)
+      returns (GetTransactionResponse);
+ 
+  // query block
+  rpc GetBlock(GetBlockRequest)
+      returns (BlockResponse);
+
+  // query balance
+  rpc GetBalance(GetBalanceRequest)
+      returns (BalanceResponse);
+}
+
+message SubmitTransactionRequest {
+  string from = 1;
+  string to = 2;
+  string amount = 3;
+  string room_id = 4;
+  string signature = 5;
+  string nonce = 6;
+}
+
+message SubmitTransactionResponse {
+  string tx_hash = 1;
+  bool accepted = 2;
+  string error = 3;
+}
+
+message GetTransactionRequest {
+  string tx_hash = 1;
+}
+
+message GetTransactionResponse {
+  Transaction transaction = 1;
+  bool found = 2;
+  string error = 3;
+}
+
+message GetBlockRequest {
+  oneof identifier {
+    int64 block_number = 1;
+    string block_hash = 2;
+  }
+}
+
+message BlockResponse {
+  Block block = 1;
+  bool found = 2;
+  string error = 3;
+}
+
+message GetBalanceRequest {
+  string address = 1;
+}
+
+message BalanceResponse {
+  int64 balance = 1;
+  string error = 2;
+}
+
+message Transaction {
+  string tx_hash = 1;
+  string from = 2;
+  string to = 3;
+  string amount = 4;
+  string room_id = 5;
+  string signature = 6;
+  string nonce = 7;
+  int64 timestamp = 8;
+  int64 block_number = 9;
+  string status = 10; // pending, confirmed, failed
+}
+
+message Block {
+  int64 block_number = 1;
+  string block_hash = 2;
+  string previous_hash = 3;
+  int64 timestamp = 4;
+  repeated Transaction transactions = 5;
+  string miner = 6;
+  int32 transaction_count = 7;
+}

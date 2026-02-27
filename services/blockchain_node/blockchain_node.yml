@@ -1,0 +1,399 @@
+openapi: 3.0.3
+
+info:
+  title: Blockchain Node Service
+  description: Blockchain node service providing transaction and block query capabilities
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: crowSupport@htomail.com
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+
+servers:
+  - url: 'https://{hostname}/api/v1'
+    description: Production server
+    variables:
+      hostname:
+        default: 127.0.0.1
+        description: myself localhost development env
+
+tags:
+  - name: Transactions
+    description: Transaction submission and query operations
+  - name: Blocks
+    description: Block query operations
+  - name: Account
+    description: Account balance operations
+
+paths:
+  /transaction/submit:
+    post:
+      tags:
+        - Transaction
+      description: submit transaction
+      summary: Submit a new transaction
+      operationId: submitTransaction
+      requestBody: 
+        required: true
+        content:
+          applocation/json:
+            schema:
+              $ref: '#/components/schemas/SubmitTransactionRequest'
+      responses:
+        '200':
+          description: Successfully!!!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitTransactionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /transactions/{tx_hash}:
+    get:
+      tags:
+        - Transaction
+      description: query transaction by tx_hash
+      summary: Get transaction by hash
+      operationId: getTransaction
+      parameters:
+        - name: tx_hash
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{64}$'
+            example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+          description: Transaction hash (64 character hex string)
+      responses:
+        '200':
+          description: Successfully!!!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTransactionResponse'
+        '400':
+          description: Invalid transaction hash format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Transaction found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /blocks/number/{block_number}:
+    post:
+      tags:
+        - Blocks
+      description: Retrieve block details using its block number and hash
+      summary: Get block by block_number and block_hash
+      operationId: getBlockByNumber
+      parameters:
+        - name: block_number
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            example: 12345
+          description: Block number (height) in the blockchain
+      responses:
+        '200':
+          description: Successfully!!!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockResponse'
+        '400':
+          description: Invalid transaction hash format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Transaction found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /blocks/hash/{block_hash}:
+    get:
+      tags:
+        - Blocks
+      summary: Get block by hash
+      description: Retrieve block details using its block hash
+      operationId: getBlockByHash
+      parameters:
+        - name: block_hash
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{64}$'
+            example: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678'
+          description: Block hash (64 character hex string)
+      responses:
+        '200':
+          description: Block found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockResponse'
+        '404':
+          description: Block not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{address}/balance:
+    get:
+      tags:
+        - Account
+      summary: Get account balance
+      description: Retrieve the balance of a specific address
+      operationId: getBalance
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+          description: Account address (40 character hex string)
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  schemas:
+    SubmitTransactionRequest:
+      type: object
+      required:
+        - from
+        - to
+        - amount
+        - room_id
+        - signature
+        - nonce
+      properties:
+        from:
+          type: string
+          description: Sender's address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        to:
+          type: string
+          description: Recipient's address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        amount:
+          type: string
+          description: Transaction amount (as string to handle large numbers)
+          example: '1000000000000000000'
+        room_id:
+          type: string
+          description: Room identifier
+          example: 'room_12345'
+        signature:
+          type: string
+          description: Cryptographic signature
+          example: '0x1234567890abcdef...'
+        nonce:
+          type: string
+          description: Transaction nonce to prevent replay attacks
+          example: '42'
+      xml:
+        name: SubmitTransactionRequest
+
+    SubmitTransactionResponse:
+      type: object
+      properties:
+        tx_hash:
+          type: string
+          description: Transaction hash
+          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        accepted:
+          type: boolean
+          description: Whether the transaction was accepted by the node
+          example: true
+        error:
+          type: string
+          description: Error message if transaction was not accepted
+          example: 'Insufficient balance'
+
+    GetTransactionResponse:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        found:
+          type: boolean
+          description: Whether the transaction was found
+          example: true
+        error:
+          type: string
+          description: Error message if any
+
+    BlockResponse:
+      type: object
+      properties:
+        block:
+          $ref: '#/components/schemas/Block'
+        found:
+          type: boolean
+          description: Whether the block was found
+          example: true
+        error:
+          type: string
+          description: Error message if any
+
+    BalanceResponse:
+      type: object
+      properties:
+        balance:
+          type: integer
+          format: int64
+          description: Account balance
+          example: 1000000000000000000
+        error:
+          type: string
+          description: Error message if any
+
+    Transaction:
+      type: object
+      properties:
+        tx_hash:
+          type: string
+          description: Transaction hash
+          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        from:
+          type: string
+          description: Sender's address
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        to:
+          type: string
+          description: Recipient's address
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        amount:
+          type: string
+          description: Transaction amount
+          example: '1000000000000000000'
+        room_id:
+          type: string
+          description: Room identifier
+          example: 'room_12345'
+        signature:
+          type: string
+          description: Cryptographic signature
+        nonce:
+          type: string
+          description: Transaction nonce
+          example: '42'
+        timestamp:
+          type: integer
+          format: int64
+          description: Transaction timestamp (Unix timestamp)
+          example: 1735678900
+        block_number:
+          type: integer
+          format: int64
+          description: Block number containing this transaction
+          example: 12345
+        status:
+          type: string
+          description: Transaction status
+          enum:
+            - pending
+            - confirmed
+            - failed
+          example: 'confirmed'
+
+    Block:
+      type: object
+      properties:
+        block_number:
+          type: integer
+          format: int64
+          description: Block number (height)
+          example: 12345
+        block_hash:
+          type: string
+          description: Block hash
+          example: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678'
+        previous_hash:
+          type: string
+          description: Hash of the previous block
+          example: '0x9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef'
+        timestamp:
+          type: integer
+          format: int64
+          description: Block creation timestamp
+          example: 1735678900
+        transactions:
+          type: array
+          description: List of transactions in this block
+          items:
+            $ref: '#/components/schemas/Transaction'
+        miner:
+          type: string
+          description: Address of the miner who created the block
+          example: '0x987d35Cc6634C0532925a3b844Bc454e4438f456'
+        transaction_count:
+          type: integer
+          format: int32
+          description: Number of transactions in this block
+          example: 42
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: 'Resource not found'
+        code:
+          type: integer
+          description: Error code
+          example: 404

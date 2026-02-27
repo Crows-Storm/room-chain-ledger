@@ -1,0 +1,13 @@
+# any viper_conf
+
+blockchain_node:
+  name: blockchain
+  http-addr: 127.0.0.1:8081
+
+room:
+  name: room
+  http-addr: 127.0.0.1:8082
+
+transaction:
+  name: txGateway
+  http-addr: 127.0.0.1:8083

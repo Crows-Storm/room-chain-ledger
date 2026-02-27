@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+package gateway.v1;
+
+option go_package = "github.com/yourname/room-chain-ledger/api/gen/tx_gateway";
+
+
+service TxGatewayService {
+
+  // unified transaction submission
+  rpc SubmitTransaction(GatewaySubmitTransactionRequest)
+      returns (GatewaySubmitTransactionResponse);
+
+  // create room (forwarded to room_service)
+  rpc CreateRoom(GatewayCreateRoomRequest)
+      returns (GatewayCreateRoomResponse);
+
+  // join room (forwarded to room_service)
+  rpc JoinRoom(GatewayJoinRoomRequest)
+      returns (GatewayJoinRoomResponse);
+
+  // close room (forwarded to room_service)
+  rpc CloseRoom(GatewayCloseRoomRequest)
+      returns (GatewayCloseRoomResponse);
+
+  // get room info
+  rpc GetRoom(GatewayGetRoomRequest)
+      returns (GatewayGetRoomResponse);
+
+  // create wallet (forwarded to wallet_service)
+  rpc CreateWallet(GatewayCreateWalletRequest)
+      returns (GatewayCreateWalletResponse);
+
+  // query balance (forwarded to blockchain_node)
+  rpc GetBalance(GatewayGetBalanceRequest)
+      returns (GatewayGetBalanceResponse);
+
+  // query transaction (forwarded to blockchain_node)
+  rpc GetTransaction(GatewayGetTransactionRequest)
+      returns (GatewayGetTransactionResponse);
+
+  // query block (forwarded to blockchain_node)
+  rpc GetBlock(GatewayGetBlockRequest)
+      returns (GatewayGetBlockResponse);
+
+  // health check
+  rpc HealthCheck(HealthCheckRequest)
+      returns (HealthCheckResponse);
+}
+
+// Transaction related
+message GatewaySubmitTransactionRequest {
+  string from = 1;
+  string to = 2;
+  string amount = 3;
+  string room_id = 4;
+  string signature = 5;
+  string nonce = 6;
+  string client_id = 7; // for rate limiting
+}
+
+message GatewaySubmitTransactionResponse {
+  string tx_hash = 1;
+  bool accepted = 2;
+  string error = 3;
+}
+
+// Room related
+message GatewayCreateRoomRequest {
+  string creator_address = 1;
+  string room_name = 2;
+  int32 max_members = 3;
+  string auth_token = 4; // authentication
+}
+
+message GatewayCreateRoomResponse {
+  string room_id = 1;
+  string tea_address = 2;
+  bool success = 3;
+  string error = 4;
+}
+
+message GatewayJoinRoomRequest {
+  string room_id = 1;
+  string member_address = 2;
+  string auth_token = 3;
+}
+
+message GatewayJoinRoomResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message GatewayCloseRoomRequest {
+  string room_id = 1;
+  string operator_address = 2;
+  string auth_token = 3;
+}
+
+message GatewayCloseRoomResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message GatewayGetRoomRequest {
+  string room_id = 1;
+}
+
+message GatewayGetRoomResponse {
+  string room_id = 1;
+  string room_name = 2;
+  string creator_address = 3;
+  string tea_address = 4;
+  repeated string member_addresses = 5;
+  int32 max_members = 6;
+  string status = 7;
+  int64 created_at = 8;
+  int64 closed_at = 9;
+  bool found = 10;
+  string error = 11;
+}
+
+// Wallet related
+message GatewayCreateWalletRequest {
+  string user_id = 1;
+  string auth_token = 2;
+}
+
+message GatewayCreateWalletResponse {
+  string address = 1;
+  string private_key = 2;
+  string public_key = 3;
+  bool success = 4;
+  string error = 5;
+}
+
+// Balance related
+message GatewayGetBalanceRequest {
+  string address = 1;
+}
+
+message GatewayGetBalanceResponse {
+  int64 balance = 1;
+  string error = 2;
+}
+
+// Transaction query
+message GatewayGetTransactionRequest {
+  string tx_hash = 1;
+}
+
+message GatewayGetTransactionResponse {
+  string tx_hash = 1;
+  string from = 2;
+  string to = 3;
+  string amount = 4;
+  string room_id = 5;
+  string signature = 6;
+  string nonce = 7;
+  int64 timestamp = 8;
+  int64 block_number = 9;
+  string status = 10;
+  bool found = 11;
+  string error = 12;
+}
+
+// Block query
+message GatewayGetBlockRequest {
+  oneof identifier {
+    int64 block_number = 1;
+    string block_hash = 2;
+  }
+}
+
+message GatewayGetBlockResponse {
+  int64 block_number = 1;
+  string block_hash = 2;
+  string previous_hash = 3;
+  int64 timestamp = 4;
+  int32 transaction_count = 5;
+  bool found = 6;
+  string error = 7;
+}
+
+// Health check
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1; // healthy, degraded, unhealthy
+  map<string, string> services = 2; // service_name -> status
+  int64 timestamp = 3;
+}

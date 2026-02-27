@@ -1,0 +1,503 @@
+openapi: 3.0.3
+
+info:
+  title: Wallet Service
+  description: Wallet management service for creating wallets, signing transactions, and managing room bindings
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: crowSupport@htomail.com
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+
+servers:
+  - url: 'https://{hostname}/api/v1'
+    description: Production server
+    variables:
+      hostname:
+        default: 127.0.0.1
+        description: myself localhost development env
+
+tags:
+  - name: Wallet
+    description: Wallet creation and management operations
+  - name: Signature
+    description: Transaction signing and verification operations
+  - name: Binding
+    description: Room binding operations
+
+paths:
+  /wallets:
+    post:
+      tags:
+        - Wallet
+      summary: Create a new wallet
+      description: Generate a new wallet with address and keys
+      operationId: createWallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletRequest'
+      responses:
+        '200':
+          description: Wallet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWalletResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets/{address}:
+    get:
+      tags:
+        - Wallet
+      summary: Get wallet information
+      description: Retrieve wallet details by address
+      operationId: getWallet
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+          description: Wallet address
+      responses:
+        '200':
+          description: Wallet found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+        '404':
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets/{address}/sign:
+    post:
+      tags:
+        - Signature
+      summary: Sign a transaction
+      description: Sign transaction data with wallet's private key
+      operationId: signTransaction
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignTransactionRequest'
+      responses:
+        '200':
+          description: Transaction signed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignTransactionResponse'
+        '400':
+          description: Invalid transaction data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets/verify:
+    post:
+      tags:
+        - Signature
+      summary: Verify a signature
+      description: Verify that a signature is valid for given message and address
+      operationId: verifySignature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifySignatureRequest'
+      responses:
+        '200':
+          description: Signature verification completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifySignatureResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets/{address}/bind:
+    post:
+      tags:
+        - Binding
+      summary: Bind wallet to room
+      description: Associate a wallet with a specific room
+      operationId: bindRoom
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindRoomRequest'
+      responses:
+        '200':
+          description: Wallet bound to room successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BindRoomResponse'
+        '400':
+          description: Invalid request or wallet already bound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets/{address}/unbind:
+    post:
+      tags:
+        - Binding
+      summary: Unbind wallet from room
+      description: Remove wallet association with a room
+      operationId: unbindRoom
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnbindRoomRequest'
+      responses:
+        '200':
+          description: Wallet unbound from room successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnbindRoomResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wallets/{address}/binding:
+    get:
+      tags:
+        - Binding
+      summary: Check wallet binding status
+      description: Check if wallet is bound to a room
+      operationId: checkBinding
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{40}$'
+            example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+      responses:
+        '200':
+          description: Binding status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckBindingResponse'
+        '404':
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreateWalletRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: Optional user identifier
+          example: 'user_12345'
+
+    CreateWalletResponse:
+      type: object
+      properties:
+        address:
+          type: string
+          description: Wallet address
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        private_key:
+          type: string
+          description: Private key (should be encrypted in production)
+          example: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'
+        public_key:
+          type: string
+          description: Public key
+          example: '0x04abcdef...'
+        success:
+          type: boolean
+          description: Whether wallet creation was successful
+          example: true
+        error:
+          type: string
+          description: Error message if creation failed
+          example: ''
+
+    WalletResponse:
+      type: object
+      properties:
+        wallet:
+          $ref: '#/components/schemas/Wallet'
+        found:
+          type: boolean
+          description: Whether the wallet was found
+          example: true
+        error:
+          type: string
+          description: Error message if any
+          example: ''
+
+    SignTransactionRequest:
+      type: object
+      required:
+        - from
+        - to
+        - amount
+        - room_id
+        - nonce
+      properties:
+        from:
+          type: string
+          description: Sender's address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        to:
+          type: string
+          description: Recipient's address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x123d35Cc6634C0532925a3b844Bc454e4438f123'
+        amount:
+          type: string
+          description: Transaction amount
+          example: '1000000000000000000'
+        room_id:
+          type: string
+          description: Room identifier
+          example: 'room_12345'
+        nonce:
+          type: string
+          description: Transaction nonce
+          example: '42'
+
+    SignTransactionResponse:
+      type: object
+      properties:
+        signature:
+          type: string
+          description: Transaction signature
+          example: '0x1234567890abcdef...'
+        success:
+          type: boolean
+          description: Whether signing was successful
+          example: true
+        error:
+          type: string
+          description: Error message if signing failed
+          example: ''
+
+    VerifySignatureRequest:
+      type: object
+      required:
+        - address
+        - message
+        - signature
+      properties:
+        address:
+          type: string
+          description: Wallet address
+          pattern: '^[a-fA-F0-9]{40}$'
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        message:
+          type: string
+          description: Original message that was signed
+          example: 'transaction_data_hash'
+        signature:
+          type: string
+          description: Signature to verify
+          example: '0x1234567890abcdef...'
+
+    VerifySignatureResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: Whether the signature is valid
+          example: true
+        error:
+          type: string
+          description: Error message if verification failed
+          example: ''
+
+    BindRoomRequest:
+      type: object
+      required:
+        - room_id
+      properties:
+        room_id:
+          type: string
+          description: Room identifier to bind to
+          example: 'room_12345'
+
+    BindRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether binding was successful
+          example: true
+        error:
+          type: string
+          description: Error message if binding failed
+          example: ''
+
+    UnbindRoomRequest:
+      type: object
+      required:
+        - room_id
+      properties:
+        room_id:
+          type: string
+          description: Room identifier to unbind from
+          example: 'room_12345'
+
+    UnbindRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether unbinding was successful
+          example: true
+        error:
+          type: string
+          description: Error message if unbinding failed
+          example: ''
+
+    CheckBindingResponse:
+      type: object
+      properties:
+        is_bound:
+          type: boolean
+          description: Whether wallet is bound to a room
+          example: true
+        room_id:
+          type: string
+          description: Room identifier if bound
+          example: 'room_12345'
+        error:
+          type: string
+          description: Error message if any
+          example: ''
+
+    Wallet:
+      type: object
+      properties:
+        address:
+          type: string
+          description: Wallet address
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        public_key:
+          type: string
+          description: Public key
+          example: '0x04abcdef...'
+        user_id:
+          type: string
+          description: Associated user identifier
+          example: 'user_12345'
+        bound_room_id:
+          type: string
+          description: Bound room identifier (empty if not bound)
+          example: 'room_12345'
+        created_at:
+          type: integer
+          format: int64
+          description: Creation timestamp
+          example: 1735678900
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: 'Resource not found'
+        code:
+          type: integer
+          description: Error code
+          example: 404
