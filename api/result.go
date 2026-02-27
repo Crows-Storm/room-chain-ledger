@@ -1,6 +1,8 @@
-package api
-
-type Result struct {
-	Message string `json:"message"`
-	Status  string `json:"status"`
-}
+//package api
+//
+//type Result struct {
+//	Success bool        `json:"success"`
+//	Message string      `json:"message,omitempty"`
+//	Data    interface{} `json:"data,omitempty"`
+//	Error   string      `json:"error,omitempty"`
+//}
